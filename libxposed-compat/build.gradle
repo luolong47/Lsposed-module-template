@@ -4,15 +4,13 @@ plugins {
 
 android {
     namespace 'io.github.libxposed'
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    
+    // 【核心修改】删掉原本复杂的 compileSdk 闭包，直接写死为 35
+    compileSdk 35
 
     defaultConfig {
         minSdk 24
-        targetSdk 36
+        targetSdk 35 // 顺便把 targetSdk 也改为 35，确保云端能顺利找到 SDK
     }
 
     compileOptions {
