@@ -1,6 +1,7 @@
-id=chastify_owndroid_bridge
-name=Chastify Owndroid Bridge
+id=chastify_do_bridge
+name=Chastify Device-Owner Bridge
 version=1.0
 versionCode=1
-author=User
-description=Bridges Chastify and Owndroid
+author=mishkarala
+description=Makes system_server treat net.chastify.app as device owner so its restrictions apply without provisioning. Scope: system.
+scope=system

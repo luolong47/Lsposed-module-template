@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">Xposed Module Template</string>
-    <string name="xposed_description">这是一个基于 libxposed 的 Xposed 模块模板。</string>
+    <string name="app_name">Chastify DO Bridge</string>
+    <string name="xposed_description">Makes system_server treat net.chastify.app as device owner so Chastify\'s DevicePolicyManager restrictions are applied. LSPosed module, scope: system.</string>
 </resources>
