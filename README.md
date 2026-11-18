@@ -1,27 +1,67 @@
-# Xposed 模块模板 (基于 libxposed)
+# Chastify Device-Owner Bridge (LSPosed-модуль)
 
-这是一个通用的 Xposed 模块模板，基于 [libxposed](https://github.com/libxposed/api) 构建。
+LSPosed-модуль, который заставляет систему считать приложение **Chastify**
+(`net.chastify.app`) владельцем устройства (device owner) — **без реального
+provisioning и без второго приложения (Owndroid)**.
 
-## 如何使用
+## Как это работает
 
-1. **修改包名**: 将 `app/build.gradle` 中的 `namespace` 和 `applicationId` 修改为你自己的包名。
-2. **重命名包目录**: 将 `app/src/main/java/com/example/module` 目录重命名为匹配你包名的目录结构。
-3. **更新模块入口**: 
-   - 修改 `MainModule.java` 以实现你的逻辑。
-   - 更新 `app/src/main/resources/META-INF/xposed/java_init.list` 里的类名，确保它指向你的 `XposedModule` 实现类。
-4. **配置作用域**:
-   - 在 `app/src/main/resources/META-INF/xposed/scope.list` 中列出你想要 Hook 的应用包名（每行一个）。
-5. **设置编译参数**:
-   - 根据需要修改 `app/build.gradle` 中的 `compileSdk` 和 `targetSdkVersion`。
+Модуль грузится в `system_server` (scope = `system`) и хукает внутренние
+проверки владельца в `DevicePolicyManagerService`:
 
-## 主要类介绍
+- `isDeviceOwner(CallerIdentity …)`
+- `isProfileOwner(CallerIdentity …)`
+- перегрузки этих методов, принимающие `ComponentName`
 
-- `MainModule.java`: 模块的主入口，继承自 `XposedModule`。
-- `java_init.list`: 告诉 libxposed 模块的入口类是谁。
-- `scope.list`: 定义模块生效的作用域（应用）。
-- `module.prop`: 模块的元数据信息。
+Хук срабатывает **только когда вызывающий — Chastify**: в этом случае проверка
+возвращает `true`, и система реально применяет запрос Chastify
+(`addUserRestriction` и т.п.). Для всех остальных приложений и компонентов
+системы вызывается оригинальный метод, так что побочных эффектов нет.
 
-## 注意事项
+Методы `DevicePolicyManagerService` — внутренние, не из SDK, и их сигнатуры
+меняются между версиями Android, поэтому они ищутся **рефлексивно во время
+выполнения** (по имени + типу аргумента), а не указываются при компиляции. За
+счёт этого модуль не привязан к одной версии Android.
 
-- 本模板使用了 `libxposed` API，请参考其官方文档以了解更多高级用法。
-- 确保在开发过程中正确配置 `compileOnly` 依赖，以避免将 Xposed API 打包进你的 APK。
+## Важно перед использованием
+
+1. **Chastify всё равно нужно включить как обычного device-admin**
+   (Настройки → приложения администратора устройства). Модуль подделывает
+   только повышение «админ → владелец», но не саму регистрацию админа — иначе
+   система не найдёт `ActiveAdmin` и упадёт ещё до проверки владельца.
+2. **Android 14+**: часть DPC-вызовов переведена на модель permission-based
+   access (разрешения `MANAGE_DEVICE_POLICY_*`) вместо проверки владельца. Для
+   user-restrictions старый путь пока работает; если какой-то конкретный вызов
+   всё же упадёт с `SecurityException`, нужно будет добавить ещё один хук на
+   проверку разрешения — смотри сообщение в `logcat`.
+
+## Сборка
+
+GitHub Actions (`.github/workflows/build.yml`) собирает debug-APK на каждый push.
+Готовый `app-debug.apk` лежит в артефактах сборки. Локально:
+
+```
+./gradlew assembleDebug
+```
+
+## Установка
+
+1. Установить APK.
+2. В LSPosed включить модуль, в области действия (scope) оставить **System
+   Framework** (`system`).
+3. Перезагрузиться.
+4. Включить Chastify как администратора устройства.
+5. Проверить `logcat | grep ChastifyBridge` — должно быть
+   `installed N owner-check hook(s)`.
+
+## Структура
+
+- `app/src/main/java/com/example/module/BridgeHook.java` — точка входа и хуки.
+- `META-INF/xposed/java_init.list` — класс входа для libxposed.
+- `META-INF/xposed/scope.list` — область действия (`system`).
+- `META-INF/xposed/module.prop` — метаданные модуля.
+
+## Зависимости
+
+Собрано на новом API [libxposed](https://github.com/libxposed/api) `102.0.0`
+(`compileOnly`, в APK не попадает).

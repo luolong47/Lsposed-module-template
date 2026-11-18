@@ -4,37 +4,23 @@ plugins {
 
 android {
     namespace 'com.example.module'
-    compileSdk 34 // 可以根据需要修改
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.example.module"
-        minSdkVersion 31
-        targetSdkVersion 34
+        minSdk 24
+        targetSdk 34
         versionCode 1
-        versionName "1.0.0"
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
+        versionName "1.0"
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_21
-        targetCompatibility JavaVersion.VERSION_21
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
-
-    lint {
-        checkReleaseBuilds false
-    }
-
-    dependenciesInfo.includeInApk false
 }
 
 dependencies {
-    compileOnly 'androidx.annotation:annotation:1.9.1'
-    compileOnly 'io.github.libxposed:api:100' // 请参考 libxposed 文档查看最新版本
-    compileOnly project(":libxposed-compat")
+    // Актуальная и реально существующая в Maven Central библиотека
+    compileOnly 'io.github.libxposed:api:102.0.0'
 }
